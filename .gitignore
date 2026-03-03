@@ -25,6 +25,10 @@ go.work.sum
 # env file
 .env
 
+# MCP config files with credentials
+bgg-mcp-config.json
+bgg-mcp-config-direct.json
+
 # Misc
 *.DS_Store
 

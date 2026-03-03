@@ -1,0 +1,19 @@
+{
+  "bgg": {
+    "command": "docker",
+    "args": [
+      "run",
+      "-i",
+      "--rm",
+      "-e",
+      "BGG_API_KEY",
+      "-e",
+      "BGG_USERNAME",
+      "bgg-mcp"
+    ],
+    "env": {
+      "BGG_API_KEY": "${BGG_API_KEY}",
+      "BGG_USERNAME": "${BGG_USERNAME}"
+    }
+  }
+}
