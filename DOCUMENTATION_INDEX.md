@@ -22,6 +22,7 @@
 | 文档 | 用途 | 优先级 |
 |------|------|--------|
 | [QUICK_START.md](QUICK_START.md) | 5分钟快速开始 | ⭐⭐⭐ |
+| [AGENT_CONFIGURATION_GUIDE.md](AGENT_CONFIGURATION_GUIDE.md) | Agent 全局/仓库配置指南 | ⭐⭐⭐ |
 | [COOKIE_AUTH_GUIDE.md](COOKIE_AUTH_GUIDE.md) | Cookie 认证详细步骤 | ⭐⭐ |
 | [.env.example](.env.example) | 环境变量模板 | ⭐⭐⭐ |
 
