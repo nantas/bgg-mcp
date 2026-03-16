@@ -4,6 +4,20 @@
 
 set -e
 
+CONTAINER_NAME="bgg-mcp-quick-test"
+SERVER_PID=""
+
+cleanup() {
+    if [ -n "$SERVER_PID" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
+        kill "$SERVER_PID" 2>/dev/null || true
+        wait "$SERVER_PID" 2>/dev/null || true
+    fi
+    docker stop "$CONTAINER_NAME" > /dev/null 2>&1 || true
+    docker rm "$CONTAINER_NAME" > /dev/null 2>&1 || true
+}
+
+trap cleanup EXIT
+
 echo "================================"
 echo "BGG MCP 连接测试"
 echo "================================"
@@ -24,7 +38,19 @@ if [ -z "$BGG_USERNAME" ]; then
     exit 1
 fi
 
+if [ -n "$BGG_API_KEY" ]; then
+    AUTH_MODE="API Key"
+    CONFIG_FILE="bgg-mcp-config-api-key.json"
+elif [ -n "$BGG_COOKIE" ]; then
+    AUTH_MODE="Cookie"
+    CONFIG_FILE="bgg-mcp-config.json"
+else
+    echo "❌ 错误: 未设置 BGG_API_KEY 或 BGG_COOKIE"
+    exit 1
+fi
+
 echo "✅ BGG_USERNAME: $BGG_USERNAME"
+echo "✅ 认证方式: $AUTH_MODE"
 echo ""
 
 # 检查二进制文件
@@ -47,7 +73,7 @@ PORT=8888
 echo "启动 HTTP 服务器在端口 $PORT..."
 
 # 启动服务器（后台运行）
-MCP_MODE=http MCP_PORT=$PORT ./build/bgg-mcp &
+BGG_API_KEY="$BGG_API_KEY" BGG_COOKIE="$BGG_COOKIE" BGG_USERNAME="$BGG_USERNAME" MCP_MODE=http MCP_PORT=$PORT ./build/bgg-mcp &
 SERVER_PID=$!
 
 # 等待服务器启动
@@ -77,6 +103,7 @@ echo ""
 echo "停止服务器..."
 kill $SERVER_PID 2>/dev/null
 wait $SERVER_PID 2>/dev/null
+SERVER_PID=""
 echo "✅ 服务器已停止"
 
 echo ""
@@ -87,10 +114,12 @@ echo ""
 
 # 测试 2: Docker 容器
 echo "启动 Docker 容器..."
-docker run -d --name bgg-mcp-quick-test \
+docker rm -f "$CONTAINER_NAME" > /dev/null 2>&1 || true
+docker run -d --name "$CONTAINER_NAME" \
     -p 8080:8080 \
-    -e BGG_COOKIE \
-    -e BGG_USERNAME \
+    -e BGG_API_KEY="$BGG_API_KEY" \
+    -e BGG_COOKIE="$BGG_COOKIE" \
+    -e BGG_USERNAME="$BGG_USERNAME" \
     -e MCP_MODE=http \
     -e MCP_PORT=8080 \
     bgg-mcp > /dev/null
@@ -98,11 +127,11 @@ docker run -d --name bgg-mcp-quick-test \
 sleep 3
 
 # 检查容器状态
-if docker ps --filter name=bgg-mcp-quick-test --format "{{.Names}}" | grep -q bgg-mcp-quick-test; then
+if docker ps --filter "name=$CONTAINER_NAME" --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
     echo "✅ Docker 容器已启动"
 else
     echo "❌ Docker 容器启动失败"
-    docker logs bgg-mcp-quick-test 2>&1
+    docker logs "$CONTAINER_NAME" 2>&1
     exit 1
 fi
 
@@ -113,16 +142,14 @@ if curl -s -f http://localhost:8080/.well-known/mcp-config > /dev/null 2>&1; the
     echo "✅ Docker 容器配置端点正常"
 else
     echo "❌ Docker 容器配置端点失败"
-    docker stop bgg-mcp-quick-test > /dev/null 2>&1
-    docker rm bgg-mcp-quick-test > /dev/null 2>&1
     exit 1
 fi
 
 # 清理
 echo ""
 echo "清理测试容器..."
-docker stop bgg-mcp-quick-test > /dev/null 2>&1
-docker rm bgg-mcp-quick-test > /dev/null 2>&1
+docker stop "$CONTAINER_NAME" > /dev/null 2>&1 || true
+docker rm "$CONTAINER_NAME" > /dev/null 2>&1 || true
 echo "✅ 测试容器已清理"
 
 echo ""
@@ -131,7 +158,7 @@ echo "✅ 所有测试通过！"
 echo "================================"
 echo ""
 echo "下一步："
-echo "1. 将 bgg-mcp-config.json 的内容添加到你的 MCP 客户端配置"
+echo "1. 将 ${CONFIG_FILE} 的内容添加到你的 MCP 客户端配置"
 echo "2. 重启 MCP 客户端"
 echo "3. 测试工具调用，例如："
 echo "   - 'Show me the current BGG hotness list'"
