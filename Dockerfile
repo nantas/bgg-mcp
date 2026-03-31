@@ -19,6 +19,8 @@ COPY --from=builder /app/bgg-mcp /usr/local/bin/bgg-mcp
 # Set executable permissions
 RUN chmod +x /usr/local/bin/bgg-mcp
 
+EXPOSE 8080
+
 # Required MCP Registry label
 LABEL io.modelcontextprotocol.server.name="io.github.kkjdaniel/bgg-mcp"
 

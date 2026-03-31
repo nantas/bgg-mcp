@@ -19,17 +19,11 @@ if [ -f ".env" ]; then
 fi
 
 echo ""
-echo "请按照以下步骤获取你的 BGG Cookie 信息："
-echo "1. 登录 https://boardgamegeek.com/"
-echo "2. 按 F12 打开浏览器开发者工具"
-echo "3. 进入 Application (应用) 标签"
-echo "4. 左侧菜单: Cookies → https://boardgamegeek.com"
-echo "5. 找到并复制以下值:"
-echo "   - bggusername (你的用户名)"
-echo "   - bggpassword (加密密码)"
-echo "   - SessionID (会话ID)"
+echo "请选择认证方式："
+echo "1) BGG API Key（推荐）"
+echo "2) BGG Cookie（兼容）"
 echo ""
-read -p "按回车键继续..."
+read -p "输入 1 或 2: " auth_choice
 
 echo ""
 echo "================================"
@@ -40,30 +34,54 @@ echo ""
 # 获取 BGG 用户名
 read -p "BGG 用户名: " username
 
-# 获取 Cookie 组件
-echo ""
-echo "请从浏览器 Cookie 中复制以下值："
-read -p "bggusername 的值: " bgg_username
-read -p "bggpassword 的值: " bgg_password
-read -p "SessionID 的值: " session_id
+api_key=""
+cookie_string=""
 
-# 构建 Cookie 字符串
-cookie_string="bggusername=${bgg_username}; bggpassword=${bgg_password}; SessionID=${session_id}"
+if [ "$auth_choice" = "1" ]; then
+    read -p "BGG API Key: " api_key
+else
+    echo ""
+    echo "请从浏览器 Cookie 中复制以下值："
+    echo "1. 登录 https://boardgamegeek.com/"
+    echo "2. 按 F12 打开浏览器开发者工具"
+    echo "3. 进入 Application (应用) 标签"
+    echo "4. 左侧菜单: Cookies → https://boardgamegeek.com"
+    echo "5. 找到并复制以下值:"
+    echo "   - bggusername (你的用户名)"
+    echo "   - bggpassword (加密密码)"
+    echo "   - SessionID (会话ID)"
+    echo ""
+    read -p "按回车键继续..."
+    echo ""
+    read -p "bggusername 的值: " bgg_username
+    read -p "bggpassword 的值: " bgg_password
+    read -p "SessionID 的值: " session_id
+    cookie_string="bggusername=${bgg_username}; bggpassword=${bgg_password}; SessionID=${session_id}"
+fi
 
 # 创建 .env 文件
 cat > .env << EOF
-# BGG MCP 环境变量配置
-# 此文件包含敏感信息，已添加到 .gitignore
+# BGG MCP local environment configuration
+# This file contains sensitive data and is ignored by Git.
 
-# BGG Cookie 认证信息
-BGG_COOKIE="${cookie_string}"
+${api_key:+BGG_API_KEY="${api_key}"}
+${cookie_string:+BGG_COOKIE="${cookie_string}"}
+BGG_USERNAME="${username}"
+EOF
 
-# BGG 用户名（纯文本）
+# 创建 macOS Docker Compose 运行环境文件
+cat > docker-compose.macos-http.env << EOF
+# macOS host-side environment for the HTTP container
+# This file contains sensitive data and is ignored by Git.
+
+${api_key:+BGG_API_KEY="${api_key}"}
+${cookie_string:+BGG_COOKIE="${cookie_string}"}
 BGG_USERNAME="${username}"
 EOF
 
 echo ""
 echo "✅ 配置文件已创建: .env"
+echo "✅ 配置文件已创建: docker-compose.macos-http.env"
 echo ""
 echo "================================"
 echo "下一步操作"
@@ -84,7 +102,15 @@ echo "  direnv allow"
 echo ""
 echo "验证环境变量:"
 echo "  echo \$BGG_USERNAME"
+if [ -n "$api_key" ]; then
+    echo "  echo \$BGG_API_KEY"
+else
+    echo "  echo \$BGG_COOKIE"
+fi
 echo ""
-echo "配置 MCP 客户端:"
-echo "  将 bgg-mcp-config.json 的内容添加到你的 MCP 客户端配置"
+echo "启动 macOS HTTP 服务:"
+echo "  docker compose -f docker-compose.macos-http.yml up -d"
+echo ""
+echo "配置 Windows 远程 MCP 客户端:"
+echo "  使用 windows-mcp-remote.json，并将 URL 改成 macOS 主机地址"
 echo ""

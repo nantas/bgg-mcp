@@ -150,30 +150,35 @@ Note: Include "use bgg-rules" in your question to ensure the AI searches BGG for
 
 > **Authentication Required**: Most BGG MCP tools require authentication to access BoardGameGeek's API. See the [Configuration section](#configuration) below for setup instructions.
 
-### A) Docker (Recommended)
+### A) macOS Docker Host with Remote HTTP
 
-BGG MCP is published to [Docker Hub](https://hub.docker.com/r/kdaniel/bgg-mcp) and listed on the [MCP Registry](https://github.com/modelcontextprotocol/registry). Add the following to your `claude_desktop_config.json` (Claude Desktop) or `settings.json` (VS Code / Cursor):
+Run the server on macOS with Docker Compose and expose the MCP HTTP endpoint on port `8080`.
 
-```json
-"bgg": {
-    "command": "docker",
-    "args": ["run", "-i", "--rm",
-        "-e", "BGG_API_KEY",
-        "-e", "BGG_USERNAME",
-        "kdaniel/bgg-mcp"
-    ],
-    "env": {
-        "BGG_API_KEY": "your_api_key_here",
-        "BGG_USERNAME": "your_bgg_username"
-    }
-}
+```bash
+cp docker-compose.macos-http.env.example docker-compose.macos-http.env
+# fill in real values in docker-compose.macos-http.env
+docker compose -f docker-compose.macos-http.yml up -d
 ```
+
+The server listens on:
+
+```text
+http://<macos-host>:8080/mcp
+```
+
+Use `BGG_API_KEY` when available. `BGG_COOKIE` is supported as a fallback.
+
+### B) Windows Remote MCP Client
+
+Windows does not run the server locally in this setup. It connects to the macOS host over Streamable HTTP.
+
+Edit `windows-mcp-remote.json` and replace `macos-host.local` with the actual LAN or VPN hostname or IP address of the macOS machine. Import that configuration into the MCP client that supports remote HTTP servers.
 
 > See [Configuration](#configuration) below for details on obtaining a BGG API key and setting up your username.
 
 For more details on connecting MCP servers to your client, see the [official MCP guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
 
-### B) Manual Setup
+### C) Manual Local Setup
 
 #### 1. Install Go
 
@@ -200,7 +205,7 @@ Or you can simply build it directly with Go...
 go build -o build/bgg-mcp
 ```
 
-#### 3. Add MCP Config
+#### 3. Add Local MCP Config
 
 In the `settings.json` (VS Code / Cursor) or `claude_desktop_config.json` add the following to your list of servers, pointing it to the binary you created earlier, once you load up your AI tool you should see the tools provided by the server connected:
 
@@ -220,6 +225,8 @@ More details for configuring Claude can be [found here](https://modelcontextprot
 BGG MCP v2.0+ uses the GoGeek v2.0 library which requires authentication for reliable access to BoardGameGeek's API.
 
 You can configure authentication using **either** `BGG_API_KEY` (recommended) or `BGG_COOKIE`:
+
+For the macOS Docker host setup, place these values in `docker-compose.macos-http.env` before starting the compose stack. Windows clients should only contain the remote HTTP URL and not any secret values.
 
 #### Authentication Setup
 
@@ -269,3 +276,5 @@ This enables:
 - **AI assistance**: The AI can automatically use your username for comparisons and analysis
 
 **Note**: When you use self-references (me, my, I) without setting BGG_USERNAME, you'll get a clear error message.
+
+For the macOS Docker host flow, keep these values in `docker-compose.macos-http.env`. For local stdio mode, keep them in your shell or local `.env`.

@@ -11,6 +11,12 @@ BGG MCP is a Model Context Protocol (MCP) server that provides access to the Boa
 - **Main Framework**: github.com/mark3labs/mcp-go
 - **API Library**: github.com/kkjdaniel/gogeek/v2
 
+## Operational Guides
+
+For deployment and client configuration, start here:
+
+- [AGENT_CONFIGURATION_GUIDE.md](/Users/nantasmac/projects/agentic/bgg-mcp/AGENT_CONFIGURATION_GUIDE.md) - Recommended setup patterns, including the macOS Docker host + Windows remote HTTP workflow
+
 ## Build Commands
 
 ```bash

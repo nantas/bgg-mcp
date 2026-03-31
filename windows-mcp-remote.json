@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bgg": {
+      "transport": "streamable-http",
+      "url": "http://macos-host.local:8080/mcp"
+    }
+  }
+}

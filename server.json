@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.kkjdaniel/bgg-mcp",
   "title": "BoardGameGeek MCP Server",
-  "description": "BoardGameGeek MCP server providing access to BGG API data through standardized tools",
+  "description": "BoardGameGeek MCP server providing access to BGG API data through standardized tools, with stdio and Streamable HTTP deployment options",
   "repository": {
     "url": "https://github.com/kkjdaniel/bgg-mcp",
     "source": "github"
